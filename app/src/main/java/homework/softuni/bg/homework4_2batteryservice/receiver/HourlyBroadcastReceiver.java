@@ -16,7 +16,7 @@ public class HourlyBroadcastReceiver extends BroadcastReceiver {
   public void onReceive(Context context, Intent intent) {
     Intent service = new Intent(context, BatteryService.class);
     if (intent.hasExtra(MainActivity.BATTERY_LEVEL)) {
-      service.putExtra(MainActivity.BATTERY_LEVEL, intent.getIntExtra(MainActivity.BATTERY_LEVEL, 1));
+      service.putExtra(MainActivity.BATTERY_LEVEL, intent.getIntExtra(MainActivity.BATTERY_LEVEL, -1));
     }
     context.startService(service);
   }

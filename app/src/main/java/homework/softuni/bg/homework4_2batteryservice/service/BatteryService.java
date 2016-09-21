@@ -17,7 +17,7 @@ public class BatteryService extends Service {
   }
 
   public void setServiceCallback(IOnBatteryChangedListener listener) {
-    callback = listener;
+        callback = listener;
   }
 
   public class BatteryServiceBinder extends Binder {
@@ -33,7 +33,7 @@ public class BatteryService extends Service {
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
-    int level = intent.getIntExtra(MainActivity.BATTERY_LEVEL, -1);
+    int level = intent.hasExtra(MainActivity.BATTERY_LEVEL) ? intent.getIntExtra(MainActivity.BATTERY_LEVEL, -1) :-1 ;
     if ((callback != null) && (level != -1)) {
       callback.updateBatteryPercentage(level);
     }

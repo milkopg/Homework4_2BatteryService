@@ -19,8 +19,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 import homework.softuni.bg.homework4_2batteryservice.listener.IOnBatteryChangedListener;
 import homework.softuni.bg.homework4_2batteryservice.receiver.BatteryBroadcastReceiver;
 import homework.softuni.bg.homework4_2batteryservice.service.BatteryService;
@@ -30,11 +28,11 @@ public class MainActivity extends AppCompatActivity implements IOnBatteryChanged
   public static final String BATTERY_LEVEL = "battery_level";
 
   private int percentLastCheck = 0;
-  private ServiceConnection connection;
   private BatteryBroadcastReceiver receiver;
 
   private Button mButtonStartService;
   private TextView mTextViewShowPercentage;
+
 
   @Override
   public void updateBatteryPercentage(int percent) {
@@ -44,8 +42,8 @@ public class MainActivity extends AppCompatActivity implements IOnBatteryChanged
             percentLastCheck = percent;
             mTextViewShowPercentage.setText("No data , service just started");
           } else {
-            percentLastCheck -= percent;
-            mTextViewShowPercentage.setText("Battery level " + percent + " , baterry went down in the last hour: " + Math.abs(percentLastCheck - percent));
+            mTextViewShowPercentage.setText("Battery level " + percent + " , baterry went down in the last hour: " + (percentLastCheck - percent) + "%");
+            percentLastCheck = percent;
           }
 
         }
@@ -56,17 +54,9 @@ public class MainActivity extends AppCompatActivity implements IOnBatteryChanged
   public void onClick(View view) {
     if (!isMyServiceRunning(BatteryService.class)) {
       Intent intent = new Intent(this, BatteryService.class);
-      bindService(intent, connection, Context.BIND_AUTO_CREATE);
+      bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
       startService(intent);
     }
-
-//    if (!isMyServiceRunning(BatteryService.class)) {
-//      mButtonStartService.setEnabled(true);
-//      mButtonStartService.setOnClickListener(this);
-//    } else {
-//      mButtonStartService.setEnabled(false);
-//      mButtonStartService.setOnClickListener(null);
-//    }
   }
 
   @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -78,37 +68,12 @@ public class MainActivity extends AppCompatActivity implements IOnBatteryChanged
     mButtonStartService = (Button) findViewById(R.id.buttonStartService);
     mButtonStartService.setOnClickListener(this);
     mTextViewShowPercentage = (TextView) findViewById(R.id.textViewBatteryPercentage);
-
-
-    connection = new ServiceConnection() {
-      @Override
-      public void onServiceConnected(ComponentName componentName, IBinder service) {
-        BatteryService.BatteryServiceBinder serviceToOperate = (BatteryService.BatteryServiceBinder) service;
-        serviceToOperate.getService().setServiceCallback(MainActivity.this);
-      }
-
-      @Override
-      public void onServiceDisconnected(ComponentName componentName) {
-        Log.d(TAG, "OnServiceDisconnected: " + componentName);
-      }
-    };
-
-//    BatteryManager bm = (BatteryManager)getSystemService(BATTERY_SERVICE);
-//    int batLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-
-//    Intent intentForBroadcast = new Intent();
-//    intentForBroadcast.setAction("android.intent.action.BATTERY_CHANGED");
-//    intentForBroadcast.putExtra(MainActivity.BATTERY_LEVEL, batLevel);
-
+    enableOrDisableButton();
 
     IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
     Intent batteryStatus = registerReceiver(null, ifilter);
-    BatteryBroadcastReceiver receiver = new BatteryBroadcastReceiver();
+    receiver = new BatteryBroadcastReceiver();
     this.registerReceiver(receiver,	new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-    //this.registerReceiver(this.batteryInfoReceiver,	new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-
-
-//    sendBroadcast(intentForBroadcast);
   }
 
 
@@ -122,41 +87,53 @@ public class MainActivity extends AppCompatActivity implements IOnBatteryChanged
     return false;
   }
 
-  private BroadcastReceiver batteryInfoReceiver = new BroadcastReceiver() {
+  @Override
+  protected void onStop() {
+    if (receiver != null)
+      try {
+        unregisterReceiver(receiver);
+      } catch (IllegalArgumentException e) {
+        Log.e(TAG, "Reveiver is not registered "  + e);
+      }
+    super.onStop();
+  }
+
+  @Override
+  protected void onPause() {
+    super.onPause();
+    unbindService(mConnection);
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    enableOrDisableButton();
+    Intent intent= new Intent(this, BatteryService.class);
+    bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    startService(intent);
+  }
+
+  ServiceConnection mConnection = new ServiceConnection() {
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onServiceConnected(ComponentName componentName, IBinder service) {
+      BatteryService.BatteryServiceBinder serviceToOperate = (BatteryService.BatteryServiceBinder) service;
+      serviceToOperate.getService().setServiceCallback(MainActivity.this);
+    }
 
-      int  health= intent.getIntExtra(BatteryManager.EXTRA_HEALTH,0);
-      int  icon_small= intent.getIntExtra(BatteryManager.EXTRA_ICON_SMALL,0);
-      int  level= intent.getIntExtra(BatteryManager.EXTRA_LEVEL,0);
-      int  plugged= intent.getIntExtra(BatteryManager.EXTRA_PLUGGED,0);
-//      boolean  present= intent.getExtras().getBoolean(BatteryManager.EXTRA_PRESENT);
-//      int  scale= intent.getIntExtra(BatteryManager.EXTRA_SCALE,0);
-//      int  status= intent.getIntExtra(BatteryManager.EXTRA_STATUS,0);
-//      String  technology= intent.getExtras().getString(BatteryManager.EXTRA_TECHNOLOGY);
-//      int  temperature= intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE,0);
-//      int  voltage= intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE,0);
-
-
-
-      mTextViewShowPercentage.setText(
-              "Health: "+health+"\n"+
-                      "Icon Small:"+icon_small+"\n"+
-                      "Level: "+level+"\n"+
-                      "Plugged: "+plugged+"\n"
-                      /*"Present: "+present+"\n"+
-                      "Scale: "+scale+"\n"+
-                      "Status: "+status+"\n"+
-                      "Technology: "+technology+"\n"+
-                      "Temperature: "+temperature+"\n"+
-                      "Voltage: "+voltage+"\n"*/);
-      //imageBatteryState.setImageResource(icon_small);
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+      Log.d(TAG, "OnServiceDisconnected: " + componentName);
     }
   };
 
-  @Override
-  protected void onStop() {
-    unregisterReceiver(receiver);
-    super.onStop();
+  public void enableOrDisableButton() {
+    if (isMyServiceRunning(BatteryService.class)) {
+      mButtonStartService.setOnClickListener(this);
+      mButtonStartService.setEnabled(true);
+      mButtonStartService.callOnClick();
+    } else {
+      mButtonStartService.setOnClickListener(null);
+      mButtonStartService.setEnabled(false);
+    }
   }
 }
