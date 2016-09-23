@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Homework4_2 Battery Service</string>
     <string name="start_service">Start Service</string>
+    <string name="no_data_service_started">No data , service just started</string>
+    <string name="receiver_not_registered">"Reveiver is not registered "</string>
+    <string name="battery_percentage_from_intent">Battery percentage from Intent: %d</string>
 </resources>

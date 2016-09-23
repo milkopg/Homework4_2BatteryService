@@ -24,7 +24,7 @@ import homework.softuni.bg.homework4_2batteryservice.receiver.BatteryBroadcastRe
 import homework.softuni.bg.homework4_2batteryservice.service.BatteryService;
 
 public class MainActivity extends AppCompatActivity implements IOnBatteryChangedListener, View.OnClickListener {
-  public final  String TAG = getClass().getSimpleName();
+  public final String TAG = getClass().getSimpleName();
   public static final String BATTERY_LEVEL = "battery_level";
 
   private int percentLastCheck = 0;
@@ -36,18 +36,18 @@ public class MainActivity extends AppCompatActivity implements IOnBatteryChanged
 
   @Override
   public void updateBatteryPercentage(int percent) {
-      synchronized (this) {
-        if (percent != -1) {
-          if (percentLastCheck == 0) {
-            percentLastCheck = percent;
-            mTextViewShowPercentage.setText("No data , service just started");
-          } else {
-            mTextViewShowPercentage.setText("Battery level " + percent + " , baterry went down in the last hour: " + (percentLastCheck - percent) + "%");
-            percentLastCheck = percent;
-          }
+    synchronized (this) {
+      if (percent != -1) {
+        if (percentLastCheck == 0) {
+          percentLastCheck = percent;
+          mTextViewShowPercentage.setText(R.string.no_data_service_started);
+        } else {
+          mTextViewShowPercentage.setText(String.format("Battery level: %d , baterry went down in the last hour: %d %%", percent, (percentLastCheck - percent)));
 
+          percentLastCheck = percent;
         }
       }
+    }
   }
 
   @Override
@@ -70,10 +70,8 @@ public class MainActivity extends AppCompatActivity implements IOnBatteryChanged
     mTextViewShowPercentage = (TextView) findViewById(R.id.textViewBatteryPercentage);
     enableOrDisableButton();
 
-    IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-    Intent batteryStatus = registerReceiver(null, ifilter);
     receiver = new BatteryBroadcastReceiver();
-    this.registerReceiver(receiver,	new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+    this.registerReceiver(receiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
   }
 
 
@@ -93,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements IOnBatteryChanged
       try {
         unregisterReceiver(receiver);
       } catch (IllegalArgumentException e) {
-        Log.e(TAG, "Reveiver is not registered "  + e);
+        Log.e(TAG, getString(R.string.receiver_not_registered) + e);
       }
     super.onStop();
   }

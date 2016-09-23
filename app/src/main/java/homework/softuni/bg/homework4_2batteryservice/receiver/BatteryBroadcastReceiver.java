@@ -11,6 +11,7 @@ import android.widget.Toast;
 import java.util.Calendar;
 
 import homework.softuni.bg.homework4_2batteryservice.MainActivity;
+import homework.softuni.bg.homework4_2batteryservice.R;
 
 import static android.content.Context.BATTERY_SERVICE;
 
@@ -19,11 +20,9 @@ import static android.content.Context.BATTERY_SERVICE;
  */
 
 public class BatteryBroadcastReceiver extends BroadcastReceiver{
-  private static final long REPEAT_TIME =  1000 * 60/* * 60*/;
+  private static final long REPEAT_TIME =  1000 * 30 * 60; // 1hour
   @Override
   public void onReceive(Context context, Intent intent) {
-    String action = intent.getAction();
-
     AlarmManager service = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
     Intent i = new Intent(context, HourlyBroadcastReceiver.class);
     int level = intent.getIntExtra("level", -1);
@@ -33,10 +32,10 @@ public class BatteryBroadcastReceiver extends BroadcastReceiver{
 
 
     Calendar cal = Calendar.getInstance();
-    // start 30 seconds after boot completed
+    // start 5 seconds after boot completed
     cal.add(Calendar.SECOND, 5);
-    // fetch every 30 seconds
+    // fetch every 1 hour
     // InexactRepeating allows Android to optimize the energy consumption
-    service.setInexactRepeating(AlarmManager.RTC_WAKEUP,  cal.getTimeInMillis(), REPEAT_TIME, pending);
+    service.setInexactRepeating(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), REPEAT_TIME, pending);
   }
 }
